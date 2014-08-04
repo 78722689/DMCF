@@ -1,10 +1,13 @@
 #include "os.h"
 #include "loger/loger_definition.h"
 
-#include <semaphore.h>
-#include<pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <semaphore.h>
 #include <errno.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 Loger loger("DMCF_API");
 
@@ -26,12 +29,12 @@ bool DMCF_OSCreateSem(void** semPtr, u32 initValue)
 	tempMutex = (DMCF_Mutex*)malloc(sizeof(DMCF_Mutex));
 	if (NULL != tempMutex)
 	{
-		tempMutex->mutex = malloc(sizeof(sem_t));
-		if (NULL != tempMutex->mutex)
+		tempMutex->sem = malloc(sizeof(sem_t));
+		if (NULL != tempMutex->sem)
 		{
-			if (0 != sem_init((sem_t*)tempMutex->mutex, 0, initValue))
+			if (0 != sem_init((sem_t*)tempMutex->sem, 0, initValue))
 			{
-				free(tempMutex->mutex);
+				free(tempMutex->sem);
 				free(tempMutex);
 				*semPtr = NULL;
 				ret = false;
@@ -52,10 +55,10 @@ bool DMCF_OSDestroySem(DMCF_Mutex* semPtr)
 	
 	if (NULL != semPtr)
 	{
-		if (-1 != sem_destroy((sem_t*)(semPtr->mutex)))
+		if (-1 != sem_destroy((sem_t*)(semPtr->sem)))
 		{
-			free(semPtr->mutex);
-			semPtr->mutex = NULL;
+			free(semPtr->sem);
+			semPtr->sem = NULL;
 		}
 		else
 		{
@@ -72,23 +75,23 @@ bool DMCF_OSDestroySem(DMCF_Mutex* semPtr)
 
 u32 DMCF_OSGetCurrentThread()
 {
-	return pthread_self();
+	return syscall(SYS_gettid);
 }
 
-void DMCF_OSWaitSemaphore(DMCF_Mutex *semPtr)
+void DMCF_OSWaitSem(DMCF_Mutex *semPtr)
 {
 	// Wait till success
-	while (-1 == sem_wait((sem_t*)semPtr->mutex))
+	while (-1 == sem_wait((sem_t*)semPtr->sem))
 	{
 		loger << debug << "Wait sem failed with errno:" << errno << " continue to request the waiting process";
 	}
 }
 
-void DMCF_OSPostSemaphore(DMCF_Mutex *semPtr)
+void DMCF_OSPostSem(DMCF_Mutex *semPtr)
 {
 	if (NULL != semPtr)
 	{
-		if ( -1 == sem_post((sem_t*)semPtr->mutex))
+		if ( -1 == sem_post((sem_t*)semPtr->sem))
 		{
 			loger << debug << "Post sem failed with errno:" << errno;
 		}

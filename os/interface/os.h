@@ -13,7 +13,7 @@ typedef unsigned short u16;typedef unsigned long int u32;
 */
 typedef struct DMCF_Mutex_t
 {
-    	void* mutex;
+    	void* sem;
 	u16 count;
 	u32 owner_uid;
 	u32 priority;
@@ -29,7 +29,7 @@ bool DMCF_OSDestroySem(void* semPtr);
 
 u32 DMCF_OSGetCurrentThread();
 
-void DMCF_OSWaitSemaphore(DMCF_Mutex *semPtr);
+void DMCF_OSWaitSem(DMCF_Mutex *semPtr);
 
-void DMCF_OSPostSemaphore(DMCF_Mutex *semPtr);
+void DMCF_OSPostSem(DMCF_Mutex *semPtr);
 #endif // _I_OS_H_

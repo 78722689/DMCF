@@ -23,7 +23,7 @@ public:
 
 		if (uid != mutex_->owner_uid)
 		{
-			DMCF_OSWaitSemaphore(mutex_);
+			DMCF_OSWaitSem(mutex_);
 			mutex_->owner_uid = uid;
 		}
 		else
@@ -39,7 +39,7 @@ public:
 			if ( 0 == mutex_->count)
 			{
 				mutex_->owner_uid = 0;
-				DMCF_OSPostSemaphore(mutex_);
+				DMCF_OSPostSem(mutex_);
 			}
 			else
 			{
