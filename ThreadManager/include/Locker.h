@@ -3,57 +3,53 @@
 
 #include "os.h"
 
-// Locker with counting semaphore of DMCS Mutex 
+// Locker with counting semaphore of DMCF Mutex 
 class Locker
 {
 public:
     Locker() : mutex_(0)
     {
-    	initMutex();
+    	DMCF_OSCreateSem(&mutex_, 1);
     }
     ~Locker()
     {
-    	if (NULL != mutex_)
-    	{
-            delete mutex_;
-			mutex_ = NULL;
-    	}
+    	DMCF_OSDestroySem(mutex_);
     }
 
 public:
-    void lock() const
+    	void lock() const
 	{
-		u32 uid = DMCS_OSGetCurrentThread();
+		u32 uid = DMCF_OSGetCurrentThread();
 
-		if (uid != mutex_->uid)
+		if (uid != mutex_->owner_uid)
 		{
-			DMCS_OSWaitSemaphore(mutex_);
-			mutex_->uid = uid;
+			DMCF_OSWaitSemaphore(mutex_);
+			mutex_->owner_uid = uid;
 		}
 		else
 		{
 			++mutex_->count; // safe in current thread for ++count
 		}
-	};
-    void unlock() const
-	{
-		u32 uid = DMCS_OSGetCurrentThread()
-		if (uid != mutex_->uid)
-		{
-			;
-		}
-		else
-		{
-			--mutex_->count;
-		}
-	};
-private:
-	void initMutex()
-	{
-		DMCS_OSCreateMutex(mutex_);
 	}
+    	void unlock() const
+	{
+		u32 uid = DMCF_OSGetCurrentThread()
+		if (uid == mutex_->owner_uid) // Only owner thread can unblock the locker.
+		{
+			if ( 0 == mutex_->count)
+			{
+				mutex_->owner_uid = 0;
+				DMCF_OSPostSemaphore(mutex_);
+			}
+			else
+			{
+				--mutex_->count;
+			}
+		}
+	}
+
 private:
-	DMCS_Mutex* mutex_;
+	DMCF_Mutex* mutex_;
 };
 
 #endif // _LOCKER_H_

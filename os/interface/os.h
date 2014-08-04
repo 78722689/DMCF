@@ -11,23 +11,25 @@ typedef unsigned short u16;typedef unsigned long int u32;
 * Mutex:
 * For counting semaphore
 */
-typedef struct DMCS_Mutex_t
+typedef struct DMCF_Mutex_t
 {
-    void* mutex;
+    	void* mutex;
 	u16 count;
-	u32 uid;
-}DMCS_Mutex;
+	u32 owner_uid;
+	u32 priority;
+}DMCF_Mutex;
 
 
 
-bool DMCS_OSInit();
-bool DMCS_OSCreateThread();
+bool DMCF_OSInit();
+bool DMCF_OSCreateThread();
 
-bool DMCS_OSCreateMutex(void* mutex);
+bool DMCF_OSCreateSem(void** semPtr, u32 initValue);
+bool DMCF_OSDestroySem(void* semPtr);
 
-u32 DMCS_OSGetCurrentThread();
+u32 DMCF_OSGetCurrentThread();
 
-void DMCS_OSWaitSemaphore(DMCS_Mutex *mutex);
+void DMCF_OSWaitSemaphore(DMCF_Mutex *semPtr);
 
-void DMCS_OSPostSemaphore(DMCS_Mutex *mutex);
+void DMCF_OSPostSemaphore(DMCF_Mutex *semPtr);
 #endif // _I_OS_H_
