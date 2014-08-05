@@ -1,3 +1,6 @@
+#ifndef _SINGLETON_H_
+#define _SINGLETON_H_
+
 #include <cstdlib>
 
 template< typename T >
@@ -67,3 +70,5 @@ private:
 
 template< typename T >
 Singleton<T> *Singleton< T >::iPtr = NULL;
+
+#endif // _SINGLETON_H_

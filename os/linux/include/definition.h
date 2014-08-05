@@ -6,6 +6,6 @@
 #include <errno.h>
 
 #include "loger/loger_definition.h"
-Loger loger("DMCF_API");
+static Loger loger("DMCF_API");
 
 #endif // _DEFINITION_H_

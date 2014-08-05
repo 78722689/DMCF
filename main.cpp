@@ -2,6 +2,10 @@
 #include "ThreadPool.h"
 #include "event/EventHandler.h"
 
+#include "Guard.h"
+#include "Locker.h"
+#include "dmcfos.h"
+
 Loger loger("main");
 
 /**** example events**************************************/
@@ -39,7 +43,7 @@ public:
     Client2()
     {
         setThread(threadPool->getThread()->holdWithParameters("Client2"));
-        loger << debug << "Client1 ThreadID[" << CURRENT_THREAD_ID << "] "<< "setthread";
+        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
         registerEventToReactive(&Client2::onStart);
     }
     ~Client2(){}
@@ -47,9 +51,14 @@ public:
 public:
     void onStart(evStart* ev)
     {
-        loger << debug << "Client2 ThreadID[" << CURRENT_THREAD_ID << "] " << "received evStart.";
+        Guard<Locker> guard(lock_);
+        
+        loger << debug << "Client2 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
         ev->src_->gen(new evResponse);
     }
+
+private:
+	Locker lock_;
 };
 
 class Client1 : public ReactiveAdapter< Client1 >
@@ -58,34 +67,42 @@ public:
     Client1()
     {
         setThread(threadPool->getThread()->holdWithParameters("Client1"));
-        loger << debug << "Client1 ThreadID[" << CURRENT_THREAD_ID << "] "<< "setthread";
+        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
         registerEventToReactive(&Client1::onStart);
         registerEventToReactive(&Client1::onResponse);
 
         client_ = new Client2;
     }
-    ~Client1(){delete client_;}
+    ~Client1()
+    {
+        delete client_;
+    }
 
 public:
     void onStart(evStart*)
     {
-        loger << debug << "Client1 ThreadID[" << CURRENT_THREAD_ID << "] " << "received evStart.";
+        Guard<Locker> guard(lock_);
+        
+        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
+
         client_->gen(new evStart(this));
     }
 
     void onResponse(evResponse*)
     {
-        loger << debug << "Client1 ThreadID[" << CURRENT_THREAD_ID << "] " << "received evResponse.";
+        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evResponse.";
     }
 
 public:
     Client2* client_;
+    Locker lock_;
 };
 
 /** Example:
 * 1. main start the process with evStart.
 * 2. Client1 notify Client2 start its process with evStart(this).
 * 3. Client2 response a message to Client1 after completed receiving and handling evStart process.
+* Note: Don't send message to a temp client, probably the thread is not handle the message yet and the temp client has been released.
 **/
 int main()
 {

@@ -1,6 +1,6 @@
 #ifndef _DMCF_OS_H_
 #define _DMCF_OS_H_
-
+#include <pthread.h>
 /**
 * Basic type of DMCS definition
 */
@@ -23,8 +23,9 @@ typedef struct DMCF_Sem_t
 
 
 bool DMCF_OSInit();
-bool DMCF_OSCreateThread();
-
+bool DMCF_OSCreateThread(u32& hThread, void*process(void*), void* param);
+void DMCF_OSJoinThread(u32 hThread);
+bool DMCF_OSCancelThread(u32 hThread);
 
 // begin semaphore
 bool DMCF_OSCreateSem(DMCF_Sem** semPtr, u32 initValue);

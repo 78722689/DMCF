@@ -7,11 +7,11 @@ class Guard
 public:
     explicit Guard(const LOCKTYPE& lock) : lock_(lock)
     {
-        lock.lock();
+        lock_.lock();
     }
     ~Guard()
     {
-        lock.unlock();
+        lock_.unlock();
     }
     
 private:
