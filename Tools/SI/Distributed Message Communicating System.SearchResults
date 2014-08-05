@@ -1,7 +1,0 @@
----- OSThread Matches (6 in 1 files) ----
-Os.h (threadmanager\include):class OSThread
-Os.h (threadmanager\include):    OSThread()
-Os.h (threadmanager\include):	~OSThread()
-Os.h (threadmanager\include):const long OSThread<T>::DefaultStackSize = DEFAULT_STACK;
-Os.h (threadmanager\include):const long OSThread<T>::DefaultMessageQueueSize = MQ_DEFAULT_SIZE;
-Os.h (threadmanager\include):const long OSThread<T>::DefaultThreadPriority = PRIORITY_NORMAL;
