@@ -5,6 +5,24 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 
+static void* process(void* param)
+{
+    while (true)
+    {
+        ;
+    }
+}
+void DMCF_OSPutMessage(void* data)
+{
+
+}
+
+bool DMCF_OSCreateThread1(u32& hThread, void callback(void*), void* param)
+{
+
+}
+
+
 bool DMCF_OSCreateThread(u32& hThread, void*process(void*), void* param)
 {
     bool ret = true;

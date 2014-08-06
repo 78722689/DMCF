@@ -5,6 +5,7 @@
 
 #include "dmcfos.h"
 #include "singleton/Singleton.h"
+#include "loger/loger_definition.h"
 
 class dmcfOSMutex
 {
@@ -19,6 +20,7 @@ protected:
 	DMCF_Sem* sem_;
 	u16 count_;
 	u32 curThread_;
+       Loger log_;
 };
 
 class dmcfOSSemaphore

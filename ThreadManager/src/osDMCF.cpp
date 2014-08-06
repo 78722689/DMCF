@@ -1,6 +1,7 @@
 #include "osDMCF.h"
+#include <iostream>
 
-dmcfOSMutex::dmcfOSMutex() : sem_(0), count_(0), curThread_(0)
+dmcfOSMutex::dmcfOSMutex() : sem_(0), count_(0), curThread_(0), log_("osDMCF")
 {
 	DMCF_OSCreateSem(&sem_, 1);
 }
@@ -12,34 +13,42 @@ dmcfOSMutex::~dmcfOSMutex()
 
 void dmcfOSMutex::lock()
 {
-	u32 uid = DMCF_OSGetCurrentThread();
+    u32 uid = DMCF_OSGetCurrentThread();
 
-	if (uid != curThread_)
-	{
-		DMCF_OSWaitSem(sem_); // Critical secion begin here.
-		curThread_ = uid;
-	}
-	else
-	{
-		++count_; // safe in current thread for ++count
-	}
+   log_ << debug << "dmcfOSMutex::lock, uid=" << uid << " oldThread="<< curThread_;
+   
+    if (uid != curThread_)
+    {   
+       log_ << debug<< "dmcfOSMutex::lock, not current thread. waiting..........";
+        DMCF_OSWaitSem(sem_); // Critical secion begin here.
+        curThread_ = uid;
+    }
+    else
+    {
+        ++count_; // safe in current thread for ++count
+        log_ << debug<< "dmcfOSMutex::lock, current thread. ++count=" << count_;
+    }
 }
+
 void dmcfOSMutex::unlock()
 {
-	u32 uid = DMCF_OSGetCurrentThread();
+    u32 uid = DMCF_OSGetCurrentThread();
 
-	if (uid == curThread_) // Only owner thread can unblock the locker.
-	{
-		if ( 0 == count_)
-		{
-			curThread_ = 0;
-			DMCF_OSPostSem(sem_);
-		}
-		else
-		{
-			--count_;
-		}
-	}
+    log_ << debug << "dmcfOSMutex::unlock, uid=" << uid << " oldThread="<< curThread_ ;
+    
+    if (uid == curThread_) // Only owner thread can unblock the locker.
+    {
+        log_ << debug<< "dmcfOSMutex::unlock, count=" << count_ ;
+        if ( 0 == count_)
+        {
+            curThread_ = 0;
+            DMCF_OSPostSem(sem_);
+        }
+        else
+        {
+            --count_;
+        }
+    }
 }
 
 

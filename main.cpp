@@ -51,14 +51,14 @@ public:
 public:
     void onStart(evStart* ev)
     {
-        Guard<Locker> guard(lock_);
+        //Guard<Locker> guard(lock_);
         
         loger << debug << "Client2 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
         ev->src_->gen(new evResponse);
     }
 
 private:
-	Locker lock_;
+	//Locker lock_;
 };
 
 class Client1 : public ReactiveAdapter< Client1 >
@@ -81,7 +81,7 @@ public:
 public:
     void onStart(evStart*)
     {
-        Guard<Locker> guard(lock_);
+        //Guard<Locker> guard(lock_);
         
         loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
 
@@ -95,7 +95,30 @@ public:
 
 public:
     Client2* client_;
-    Locker lock_;
+    //Locker lock_;
+};
+
+class Client3 : public ReactiveAdapter< Client3 >
+{
+public:
+    Client3(Client2* client): client_(client)
+    {
+        setThread(threadPool->getThread()->holdWithParameters("Client3"));
+        loger << debug << "Client3 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
+        registerEventToReactive(&Client3::onResponse);
+        client_->gen(new evStart(this));
+    }
+    Client3(){}
+
+public:
+   void onResponse(evResponse*)
+    {
+        loger << debug << "Client3 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evResponse.";
+    }
+
+private:
+    Client2* client_;
+	//Locker lock_;
 };
 
 /** Example:
@@ -109,9 +132,9 @@ int main()
     threadPool->CreateThreads();
 
     Client1 client1;
+   Client3 client3(client1.client_);
     client1.gen(new evStart);
     threadPool->joinThreads();
-
 
     return 0;
 }
