@@ -2,7 +2,6 @@
 #define _EVENT_QUEUE_POOL_H_
 
 #include "IQueuePool.h"
-#include "Queue.h"
 #include "event/EventHandler.h"
 #include "osDMCF.h"
 #include "Guard.h"
