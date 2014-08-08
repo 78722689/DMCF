@@ -38,7 +38,7 @@ public:
         for (std::vector< IThread* >::iterator it = BaseThreadVec_.begin();
         it != BaseThreadVec_.end(); ++it)
         {
-            if ((*it)->getThreadState() == EUninitilization)
+            if ((*it)->getThreadState() == ECreated)
             {
                 return *it;
             }
@@ -63,7 +63,7 @@ public:
         for (std::vector<IThread* >::iterator it = BaseThreadVec_.begin();
             it != BaseThreadVec_.end(); ++it)
         {
-            if ((*it)->getThreadState() == EBusy)
+            if ((*it)->getThreadState() == ECreated)
             {
                 (*it)->joinThread();
             }

@@ -1,5 +1,32 @@
 #include "osDMCF.h"
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <errno.h>
 #include <iostream>
+
+dmcfOSFactory::dmcfOSFactory()
+{}
+dmcfOSFactory::~dmcfOSFactory()
+{}
+
+dmcfOSMutex* dmcfOSFactory::createDMCFOSMutex()
+{
+	return new dmcfOSMutex();
+}
+dmcfOSSemaphore* dmcfOSFactory::createDMCFOSSemphore(u32 initValue/* = 0*/)
+{
+	return new dmcfOSSemaphore(initValue);
+}
+dmcfOSThread* dmcfOSFactory::createDMCFOSThread(dmcf_threadinfo_t* threadinfo/* = NULL*/)
+{
+	return new dmcfOSThread(threadinfo);
+}
+
+dmcfOSQueue* dmcfOSFactory::createDMCFOSQueue()
+{
+    return new dmcfOSQueue();
+}
 
 dmcfOSMutex::dmcfOSMutex() : sem_(0), count_(0), curThread_(0), log_("osDMCF")
 {
@@ -72,25 +99,121 @@ bool dmcfOSSemaphore::wait(u32 timeout/* = -1*/)
 	return true;
 }
 
+static void* PROCESS(void* param)
+{
+    dmcf_threadinfo_t* threadinfo = static_cast<dmcf_threadinfo_t*>(param);
+    
+    while (true)
+    {
+        std::cout << "PROCESS: thread:"<< DMCF_OSGetCurrentThread()<< " Waiting........................."<<std::endl;
+        threadinfo->sem->wait();
+        std::cout << "PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " received a semaphore...."<<std::endl;
+        if (threadinfo->cb != (CALLBACK)0)
+        {
+            threadinfo->cb(threadinfo->param);
+        }
+        else // No callback, default process.
+        {
+            std::cout << " PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " no callback." << std::endl;
+        }
+    }
+
+    std::cout << " PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " exit........................................" << std::endl;
+}
+
+// Nothing to do without thread information.
 dmcfOSThread::dmcfOSThread()
-{}
+{
+}
+
+dmcfOSThread::dmcfOSThread(dmcf_threadinfo_t* threadinfo) 
+    : loger_("dmcfOSThread"),
+    sem_(OSFactoryInstatnce->createDMCFOSSemphore())
+{
+    threadinfo->sem = sem_;
+    initThread(threadinfo);
+}
 dmcfOSThread::~dmcfOSThread()
-{}
-
-dmcfOSFactory::dmcfOSFactory()
-{}
-dmcfOSFactory::~dmcfOSFactory()
-{}
-
-dmcfOSMutex* dmcfOSFactory::createDMCFOSMutex()
 {
-	return new dmcfOSMutex();
+    // TODO: release the sem_ before deleting it.
+    delete sem_;
 }
-dmcfOSSemaphore* dmcfOSFactory::createDMCFOSSemphore(u32 initValue/* = 0*/)
+
+void dmcfOSThread::initThread(dmcf_threadinfo_t* threadinfo)
 {
-	return new dmcfOSSemaphore(initValue);
+    if (pthread_create(&hThread_, NULL, PROCESS, (void*)threadinfo) != 0)
+    {
+        loger_<< debug << "DMCF_OSCreateThread: Create thread failed with errno:" << errno;
+    }
+    else
+    {
+        loger_ << debug << "DMCF_OSCreateThread: Create thread[" << hThread_ << "] sucessfully.";
+    }
 }
-dmcfOSThread* dmcfOSFactory::createDMCFOSThread()
+
+u32 dmcfOSThread::getThreadId() const
 {
-	return new dmcfOSThread();
+    return syscall(SYS_gettid);
+}
+
+void dmcfOSThread::signal() const
+{
+    sem_->signal();
+}
+
+void dmcfOSThread::join() //const
+{
+    loger_ << debug << "DMCF_OSCreateThread: Join thread[" << hThread_ << "] sucessfully.";
+    
+    if (pthread_join(hThread_, NULL) != 0)
+    {
+        loger_ << debug << "DMCF_OSCreateThread: Join thread[" << hThread_ << "]  NOT sucessfully.";
+    }
+}
+
+bool dmcfOSThread::stop() const
+{
+    return pthread_cancel(hThread_);
+}
+dmcfOSQueue::dmcfOSQueue(dmcfOSThread* threadHandle/* = NULL*/)
+    : osThread_(threadHandle)
+    , loger_("dmcfOSQueue")
+{
+}
+
+dmcfOSQueue::~dmcfOSQueue()
+{
+    // TODO: may you should release all the messages before release itself.
+}
+
+void dmcfOSQueue::put(void* param)
+{
+    //Guard<Locker> guard(lock_);
+
+    loger_ << debug << "queue::put()" ;    
+    message_.push_back(param);
+
+    // Take a message to thread for notifying the data ready.
+    osThread_->signal();
+}
+
+bool dmcfOSQueue::isEmpty() const 
+{
+    return message_.empty();
+}
+
+void* dmcfOSQueue::takeMessage()
+{
+    //Guard<Locker> guard(lock_);
+
+    loger_ << debug  << "queue::takeMessage()" ;
+    void *msg = message_.front();
+    message_.pop_front(); // the message just be remove from list, it should be deleted after useage.
+
+    return msg;
+}
+
+void dmcfOSQueue::setOSThreadHandle(dmcfOSThread* threadHandle)
+{
+    osThread_ = threadHandle;  
 }

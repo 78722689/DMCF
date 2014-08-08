@@ -4,6 +4,9 @@
 #include "IQueuePool.h"
 #include "Queue.h"
 #include "event/EventHandler.h"
+#include "osDMCF.h"
+#include "Guard.h"
+#include "Locker.h"
 
 // Decorator for Queue.
 // A FIFO queue to buffer the tasks for thread
@@ -11,19 +14,39 @@
 class EventQueuePool : public IQueuePool
 {
 public:
-    EventQueuePool()
+    EventQueuePool() : queue_(OSFactoryInstatnce->createDMCFOSQueue())
     {}
     ~EventQueuePool()
-    {}
+    {
+        delete queue_;
+    }
 
-    void put(void* param){queue_.put(param);}
+    void put(void* param)
+    {
+        Guard<Locker> guard(lock_);
+        
+        queue_->put(param);
+    }
 
-    bool isEmpty() const {return queue_.isEmpty();}
+    bool isEmpty() const {return queue_->isEmpty();}
 
-    void* takeMessage(){return queue_.takeMessage();}
+    void* takeMessage()
+    {
+        Guard<Locker> guard(lock_);
+        
+        return queue_->takeMessage();
+    }
 
+    void setOwnerThread(IThread* owner)
+    {
+        owner_ = owner;
+        queue_->setOSThreadHandle(static_cast<dmcfOSThread*>(owner_->getOSThreadHandle()));
+    }
 private:
-    Queue queue_;
+    //Queue queue_;
+    dmcfOSQueue* queue_;
+    IThread* owner_;
+    Locker lock_;
 };
 
 #endif // _EVENT_QUEUE_POOL_H_

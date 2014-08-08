@@ -121,6 +121,7 @@ private:
 	//Locker lock_;
 };
 
+
 /** Example:
 * 1. main start the process with evStart.
 * 2. Client1 notify Client2 start its process with evStart(this).
@@ -132,9 +133,10 @@ int main()
     threadPool->CreateThreads();
 
     Client1 client1;
-   Client3 client3(client1.client_);
+    Client3 client3(client1.client_);
     client1.gen(new evStart);
     threadPool->joinThreads();
 
+    loger << debug << "main exit................................";
     return 0;
 }
