@@ -4,7 +4,7 @@
 
 #include "Guard.h"
 #include "Locker.h"
-#include "dmcfos.h"
+//#include "dmcfos.h"
 
 Loger loger("main");
 
@@ -43,7 +43,7 @@ public:
     Client2()
     {
         setThread(threadPool->getThread()->holdWithParameters("Client2"));
-        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
+        loger << debug << "Client1 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] "<< "setthread";
         registerEventToReactive(&Client2::onStart);
     }
     ~Client2(){}
@@ -53,7 +53,7 @@ public:
     {
         //Guard<Locker> guard(lock_);
         
-        loger << debug << "Client2 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
+        loger << debug << "Client2 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] " << "received evStart.";
         ev->src_->gen(new evResponse);
     }
 
@@ -67,7 +67,7 @@ public:
     Client1()
     {
         setThread(threadPool->getThread()->holdWithParameters("Client1"));
-        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
+        loger << debug << "Client1 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] "<< "setthread";
         registerEventToReactive(&Client1::onStart);
         registerEventToReactive(&Client1::onResponse);
 
@@ -83,14 +83,14 @@ public:
     {
         //Guard<Locker> guard(lock_);
         
-        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evStart.";
+        loger << debug << "Client1 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] " << "received evStart.";
 
         client_->gen(new evStart(this));
     }
 
     void onResponse(evResponse*)
     {
-        loger << debug << "Client1 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evResponse.";
+        loger << debug << "Client1 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] " << "received evResponse.";
     }
 
 public:
@@ -104,7 +104,7 @@ public:
     Client3(Client2* client): client_(client)
     {
         setThread(threadPool->getThread()->holdWithParameters("Client3"));
-        loger << debug << "Client3 ThreadID[" << DMCF_OSGetCurrentThread() << "] "<< "setthread";
+        loger << debug << "Client3 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] "<< "setthread";
         registerEventToReactive(&Client3::onResponse);
         client_->gen(new evStart(this));
     }
@@ -113,7 +113,7 @@ public:
 public:
    void onResponse(evResponse*)
     {
-        loger << debug << "Client3 ThreadID[" << DMCF_OSGetCurrentThread() << "] " << "received evResponse.";
+        loger << debug << "Client3 ThreadID[" << OS_TOOLS::OSGetCurrentThreadId() << "] " << "received evResponse.";
     }
 
 private:

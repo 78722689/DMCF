@@ -3,7 +3,16 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <errno.h>
-#include <iostream>
+#include <semaphore.h>
+
+namespace OS_TOOLS
+{
+    u32 OSGetCurrentThreadId()
+    {
+        return syscall(SYS_gettid);
+    }
+};  // TOOLS
+
 
 dmcfOSFactory::dmcfOSFactory()
 {}
@@ -30,24 +39,24 @@ dmcfOSQueue* dmcfOSFactory::createDMCFOSQueue()
 
 dmcfOSMutex::dmcfOSMutex() : sem_(0), count_(0), curThread_(0), log_("osDMCF")
 {
-	DMCF_OSCreateSem(&sem_, 1);
+    sem_ = OSFactoryInstatnce->createDMCFOSSemphore(1);
 }
 
 dmcfOSMutex::~dmcfOSMutex()
 {
-	DMCF_OSDestroySem(sem_);
+    delete sem_;
 }
 
 void dmcfOSMutex::lock()
 {
-    u32 uid = DMCF_OSGetCurrentThread();
+    u32 uid = OS_TOOLS::OSGetCurrentThreadId();
 
    log_ << debug << "dmcfOSMutex::lock, uid=" << uid << " oldThread="<< curThread_;
    
     if (uid != curThread_)
     {   
-       log_ << debug<< "dmcfOSMutex::lock, not current thread. waiting..........";
-        DMCF_OSWaitSem(sem_); // Critical secion begin here.
+        log_ << debug<< "dmcfOSMutex::lock, not current thread. waiting..........";
+        sem_->wait(); // Critical section begin here.
         curThread_ = uid;
     }
     else
@@ -59,7 +68,7 @@ void dmcfOSMutex::lock()
 
 void dmcfOSMutex::unlock()
 {
-    u32 uid = DMCF_OSGetCurrentThread();
+    u32 uid = OS_TOOLS::OSGetCurrentThreadId();
 
     log_ << debug << "dmcfOSMutex::unlock, uid=" << uid << " oldThread="<< curThread_ ;
     
@@ -69,7 +78,7 @@ void dmcfOSMutex::unlock()
         if ( 0 == count_)
         {
             curThread_ = 0;
-            DMCF_OSPostSem(sem_);
+            sem_->signal();
         }
         else
         {
@@ -81,44 +90,111 @@ void dmcfOSMutex::unlock()
 
 dmcfOSSemaphore::dmcfOSSemaphore(u32 initValue/* = 0*/) : sem_(0)
 {
-	DMCF_OSCreateSem(&sem_, initValue);
+    createSem(initValue);
 }
 dmcfOSSemaphore::~dmcfOSSemaphore()
 {
-	DMCF_OSDestroySem(sem_);
+    destroySem();
 }
 
 void dmcfOSSemaphore::signal()
 {
-	DMCF_OSPostSem(sem_);
+    postSem();
 }
 bool dmcfOSSemaphore::wait(u32 timeout/* = -1*/)
 {
-	DMCF_OSWaitSem(sem_);
-	
-	return true;
+    waitSem();
+
+    return true;
 }
 
+bool dmcfOSSemaphore::createSem( u32 initValue)
+{
+	bool ret = true;
+	
+	sem_ = (DMCF_Sem*)malloc(sizeof(DMCF_Sem));
+	if (NULL != sem_)
+	{
+		sem_->sem = malloc(sizeof(sem_t));
+		if (NULL != sem_->sem)
+		{
+			if (0 != sem_init((sem_t*)sem_->sem, 0, initValue))
+			{
+				free(sem_->sem);
+				free(sem_);
+				sem_ = NULL;
+				ret = false;
+				loger_ << debug << "Create sem failed with errno:" << errno;
+			}
+		}
+	}
+
+	loger_ << debug << "Sem created sucessfully!";
+	return ret;
+}
+
+void dmcfOSSemaphore::postSem()
+{
+	if (NULL != sem_)
+	{
+		if ( -1 == sem_post((sem_t*)sem_->sem))
+		{
+			loger_ << debug << "Post sem failed with errno:" << errno;
+		}
+
+		loger_ << debug << "Post sem sucessfully!";
+	}
+}
+
+void dmcfOSSemaphore::waitSem()
+{
+    // Wait till success
+    while (-1 == sem_wait((sem_t*)sem_->sem))
+    {
+    	loger_ << debug << "Wait sem failed with errno:" << errno << ", continue to request the waiting process";
+    }
+}
+
+void dmcfOSSemaphore::destroySem()
+{
+    if (NULL != sem_)
+    {
+        if (-1 != sem_destroy((sem_t*)(sem_->sem)))
+        {
+        	free(sem_->sem);
+        	sem_->sem = NULL;
+        }
+        else
+        {
+        	loger_ << debug << "Destroy sem failed with errno:" << errno;
+        }
+    }
+
+    free(sem_);
+    sem_ = NULL;
+}
+
+#include <iostream> // testing include
 static void* PROCESS(void* param)
 {
     dmcf_threadinfo_t* threadinfo = static_cast<dmcf_threadinfo_t*>(param);
     
     while (true)
     {
-        std::cout << "PROCESS: thread:"<< DMCF_OSGetCurrentThread()<< " Waiting........................."<<std::endl;
+        std::cout << "PROCESS: thread:"<< OS_TOOLS::OSGetCurrentThreadId()<< " Waiting........................."<<std::endl;
         threadinfo->sem->wait();
-        std::cout << "PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " received a semaphore...."<<std::endl;
+        std::cout << "PROCESS: thread:"<< OS_TOOLS::OSGetCurrentThreadId() << " received a semaphore...."<<std::endl;
         if (threadinfo->cb != (CALLBACK)0)
         {
             threadinfo->cb(threadinfo->param);
         }
         else // No callback, default process.
         {
-            std::cout << " PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " no callback." << std::endl;
+            std::cout << " PROCESS: thread:"<< OS_TOOLS::OSGetCurrentThreadId() << " no callback." << std::endl;
         }
     }
 
-    std::cout << " PROCESS: thread:"<< DMCF_OSGetCurrentThread() << " exit........................................" << std::endl;
+    std::cout << " PROCESS: thread:"<< OS_TOOLS::OSGetCurrentThreadId() << " exit........................................" << std::endl;
 }
 
 // Nothing to do without thread information.
