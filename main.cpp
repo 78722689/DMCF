@@ -36,7 +36,7 @@ public:
     ~evResponse(){}
 };
 
-// An example for event how it works with Reactive, and communicates between threads.
+// An example for show how the event works with Reactive, and communicates between threads.
 class Client2 : public ReactiveAdapter< Client2 >
 {
 public:

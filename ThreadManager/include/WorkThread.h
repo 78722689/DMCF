@@ -4,8 +4,8 @@
 class WorkThread : public BaseThread<EventQueuePool>
 {
 public:
-    WorkThread()
-        : BaseThread("WorkThread", processEntry, this)
+   explicit WorkThread(u32 priority = EPriority_Low, u32 stacksize = THREAD_STACK_MIN_SUPPORT)
+        : BaseThread("WorkThread", processEntry, this, priority, stacksize)
         , loger_("WorkThread")
     {
         

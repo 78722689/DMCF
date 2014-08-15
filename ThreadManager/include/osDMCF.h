@@ -6,6 +6,7 @@
 #include "singleton/Singleton.h"
 #include "loger/loger_definition.h"
 #include <list>
+#include <limits.h>
 
 struct dmcf_threadinfo_t;
 class dmcfOSFactory;
@@ -21,6 +22,13 @@ class dmcfOSThread;
 typedef unsigned short u16;
 typedef unsigned long int u32;
 
+typedef enum EThreadPriority
+{
+    EPriority_Low = 0,
+    EPriority_High
+}EThreadPriority;
+
+const u32 THREAD_STACK_MIN_SUPPORT = PTHREAD_STACK_MIN;
 
 /**
 * Mutex:
@@ -60,7 +68,7 @@ public:
 	void lock();
 	void unlock();
 
-protected:
+private:
 	u16 count_;
 	u32 curThread_;
        Loger log_;
@@ -81,7 +89,7 @@ private:
     void waitSem();
     void destroySem();
 
-protected:
+private:
     DMCF_Sem* sem_;
     Loger loger_;
 };
@@ -91,6 +99,8 @@ typedef void (*CALLBACK)(void* param);
 struct dmcf_threadinfo_t
 {
     char* name;
+    u32 priority;
+    u32 stacksize;
     CALLBACK cb;
     void* param;
     dmcfOSSemaphore* sem;  // Don't fill this field
@@ -117,6 +127,8 @@ private:
     dmcfOSSemaphore* sem_;
 };
 
+#include "Guard.h"
+#include "Locker.h"
 class dmcfOSQueue
 {
 public:
@@ -130,11 +142,11 @@ public:
     void* takeMessage();
     void setOSThreadHandle(dmcfOSThread* threadHandle);
 
-protected:
-    dmcfOSThread* osThread_;
 private:
+    dmcfOSThread* osThread_;
     std::list<void*> message_;
     Loger loger_;
+    Locker lock_;
 };
 
 // singletion services to all caller

@@ -264,7 +264,7 @@ dmcfOSQueue::~dmcfOSQueue()
 
 void dmcfOSQueue::put(void* param)
 {
-    //Guard<Locker> guard(lock_);
+    Guard<Locker> guard(lock_);
 
     loger_ << debug << "queue::put()" ;    
     message_.push_back(param);
@@ -280,7 +280,7 @@ bool dmcfOSQueue::isEmpty() const
 
 void* dmcfOSQueue::takeMessage()
 {
-    //Guard<Locker> guard(lock_);
+    Guard<Locker> guard(lock_);
 
     loger_ << debug  << "queue::takeMessage()" ;
     void *msg = message_.front();
