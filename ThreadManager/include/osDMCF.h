@@ -29,6 +29,7 @@ typedef enum EThreadPriority
 }EThreadPriority;
 
 const u32 THREAD_STACK_MIN_SUPPORT = PTHREAD_STACK_MIN;
+const u32 THREAD_STACK_MAX_SUPPORT = 1024*1024*3 ; // 3G
 
 /**
 * Mutex:
@@ -120,7 +121,8 @@ public:
 
 protected:
     void initThread(dmcf_threadinfo_t* threadinfo);
-
+    void setStack(u32 stacksize);
+    void setPriority(u32 priority);
 private:
     Loger loger_;
     u32 hThread_;

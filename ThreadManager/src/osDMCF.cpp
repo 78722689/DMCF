@@ -217,6 +217,9 @@ dmcfOSThread::~dmcfOSThread()
 
 void dmcfOSThread::initThread(dmcf_threadinfo_t* threadinfo)
 {
+    setStack(threadinfo->stacksize);
+    setPriority(threadinfo->priority);
+    
     if (pthread_create(&hThread_, NULL, PROCESS, (void*)threadinfo) != 0)
     {
         loger_<< debug << "DMCF_OSCreateThread: Create thread failed with errno:" << errno;
@@ -251,6 +254,69 @@ bool dmcfOSThread::stop() const
 {
     return pthread_cancel(hThread_);
 }
+
+void dmcfOSThread::setStack(u32 stacksize)
+{
+    u32 stack = THREAD_STACK_MIN_SUPPORT;
+
+    if (stacksize <=0 || stacksize > THREAD_STACK_MAX_SUPPORT)
+    {
+        stack = THREAD_STACK_MAX_SUPPORT;
+        loger_ << debug << "default stack size used.";
+    }
+    else if (stacksize > stack && stacksize <= THREAD_STACK_MAX_SUPPORT)
+    {
+        stack = stacksize;
+    }
+    else
+    {
+        loger_ << debug << "minior stack size used.";
+    }
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    
+    if (0 != pthread_attr_setstacksize(&attr, stack))
+    {
+        loger_ << debug << "set stack size failed.";
+    }
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+
+void dmcfOSThread::setPriority(u32 priority)
+{
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    
+    if (0!= pthread_attr_setschedpolicy(&attr, SCHED_OTHER))
+    {
+        loger_ << debug << "set thread schedule policy failed.";
+        return;
+    }
+
+    sched_param schedParam = {'\0'};
+    u32 minPriority = sched_get_priority_min(SCHED_OTHER);
+    u32 maxPriority = sched_get_priority_max(SCHED_OTHER);
+    if (priority < minPriority || priority == EPriority_Low)
+    {
+        schedParam.sched_priority = minPriority;
+        loger_ << debug <<  "Priority value is too low, set thread schedule priority with minor priority";
+    }
+    else if (priority > maxPriority || priority == EPriority_High)
+    {
+        schedParam.sched_priority = maxPriority;
+         loger_ << debug <<  "Priority value is too high, set thread schedule priority with maximal priority";
+    }
+    else
+    {
+        schedParam.sched_priority = priority;
+    }
+    
+    if (0 != pthread_attr_setschedparam(&attr, &schedParam))
+    {
+        loger_ << debug << "set thread priority failed.";
+    }
+}
+
 dmcfOSQueue::dmcfOSQueue(dmcfOSThread* threadHandle/* = NULL*/)
     : osThread_(threadHandle)
     , loger_("dmcfOSQueue")
