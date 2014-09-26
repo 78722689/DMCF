@@ -4,17 +4,21 @@
 #define _MSG_RECEIVER_
 
 #include "DispatcherDefinition.h"
+#include "IMsgReceiver.h"
+#include "MsgDispatcher.h"
 
 #include <memory>
 #include <list>
+#include <algorithm>
 
-class IMsgReceiver
+namespace Dispatcher
 {
-public:
-    virtual ~IMsgReceiver()
-    {}
 
-    virtual void handle() = 0;
+
+struct HandlerCaller
+{
+    HandlerCaller(IMessage* msg)
+    {}
 };
 
 struct MsgReceiverHandlerBase
@@ -30,7 +34,7 @@ template<class SERVER, class MESSAGE>
 class MsgReceiverHandler : public MsgReceiverHandlerBase
 {
 
-typedef void (SERVER::*OPERATION)(MSG_BASE*);
+typedef void (SERVER::*OPERATION)(MESSAGE*);
 
 public:
     MsgReceiverHandler(SERVER* server, OPERATION operation)
@@ -58,8 +62,10 @@ class MsgReceiver : public IMsgReceiver
     typedef std::list<std::shared_ptr<MsgReceiverHandlerBase> > RECEIVER_HANDLER;
 
 public:
-    MsgReceiver()
-    {}
+    MsgReceiver(int descriptor, IDispatcher* dispatcher) : descriptor_(descriptor), dispatcher_(dispatcher)
+    {
+        subscribeToDispatcher();
+    }
     ~MsgReceiver()
     {}
 
@@ -69,15 +75,32 @@ public:
         msg_list_.push_back(makeMsgReceiverHandler(HANDLER));
     }
 
+
 protected:
     template<typename MESSAGE>
     std::shared_ptr<MsgReceiverHandlerBase> makeMsgReceiverHandler(void (*HANDLER)(MESSAGE*))
     {
         return std::make_shared<MsgReceiverHandler<SERVER, MESSAGE> >(static_cast<SERVER>(this), HANDLER);
     }
-    
+
+    void subscribeToDispatcher()
+    {
+        if (NULL != dispatcher_)
+        {
+            dispatcher_->subscribeMessages(this);
+        }
+    }
+
+    virtual void handle(IMessage* msg) 
+    {
+        // std::for_each(msg_list_.begin, msg_list_.end, HandlerCaller(msg));
+    }
 private:
+    int descriptor_;
+    IDispatcher* dispatcher_;
     RECEIVER_HANDLER msg_list_;
+   
 };
 
+}
 #endif // _MSG_RECEIVER_
