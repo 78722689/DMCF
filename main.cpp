@@ -4,6 +4,7 @@
 
 #include "Guard.h"
 #include "Locker.h"
+#include "MsgDispatcher/include/MsgReceiver.h"
 //#include "dmcfos.h"
 
 Loger loger("main");
