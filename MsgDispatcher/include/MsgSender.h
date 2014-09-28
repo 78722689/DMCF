@@ -1,35 +1,46 @@
 
+// To send the messages to others process or units
+// NOTE: you can only send the messages after received the instance of MsgSender from dispatcher, 
+// that's meant you must waiting for the process that it is startuped normally and registered to dispatcher sucessfully.
+
 #ifndef _MSG_SENDER_
 #define _MSG_SENDER_
 
 #include "DispatcherDefinition.h"
+#include "IMsgSender.h"
 
-class IMsgSender
+namespace Dispatcher
 {
+
+class MsgSender : public IMsgSender
+{
+    typedef std::list<IMessage> BUFFERED_MSG;
 public:
-    virtual ~IMsgReceiver()
+    MsgSender() : descriptor_(-1)
     {}
-
-    virtual void handle() = 0;
-};
-
-
-class MsgSender //: public IMsgSender
-{
-public:
-    MsgSender()
+    MsgSender(int descriptor) : descriptor_(descriptor)
     {}
     ~MsgSender()
     {}
 
-    template<typename MESSAGE>
-    void registerMsgToReceiver(MSG_BASE* msg)
+    // Send messages via IPC interface....
+    virtual void send(const IMessage& msg)
     {
-        //msg_queue_.push_back(*msg);
+        // if no valid descriptor, buffered the sending message to list till received the valid descriptor.
+        if (-1 == descriptor_)
+        {
+            buffered_msg_list_.push_back(msg);
+        }
+        else // TODO: Send it.
+        {
+               ; // TODO: Send it with IPC interface.
+        }
     }
 
 private:
-    //std::vector<MSG_BASE> msg_queue_;
+    int descriptor_;    // Dest descriptor, it's only set after the process startuped and registered to dispatcher sucessfully.
+    BUFFERED_MSG buffered_msg_list_;
 };
 
+}
 #endif // _MSG_SENDER_

@@ -1,4 +1,4 @@
-// To receive the messages what comes from others process or unit.
+// To receive the messages what comes from others process or units.
 
 #ifndef _MSG_RECEIVER_
 #define _MSG_RECEIVER_
@@ -14,11 +14,21 @@
 namespace Dispatcher
 {
 
-
 struct HandlerCaller
 {
-    HandlerCaller(IMessage* msg)
+    HandlerCaller(IMessage* msg) : msg_(msg)
     {}
+
+    template<typename T>
+    void operator ()(T& element) const
+    {
+        if (element.getMsgId() == msg_->getMsgId())
+        {
+            element.callOperation(msg_);
+        }
+    }
+
+    IMessage* msg_;
 };
 
 struct MsgReceiverHandlerBase
@@ -49,8 +59,12 @@ public:
         return msg.getMsgId();
     }
 
+    inline void callOperation(MESSAGE* msg)
+    {
+        (server_->*operation_)(msg);
+    }
 private:
-    SERVER server_;
+    SERVER *server_;
     OPERATION operation_;
 };
 
@@ -75,7 +89,6 @@ public:
         msg_list_.push_back(makeMsgReceiverHandler(HANDLER));
     }
 
-
 protected:
     template<typename MESSAGE>
     std::shared_ptr<MsgReceiverHandlerBase> makeMsgReceiverHandler(void (*HANDLER)(MESSAGE*))
@@ -87,13 +100,13 @@ protected:
     {
         if (NULL != dispatcher_)
         {
-            dispatcher_->subscribeMessages(this);
+            dispatcher_->subscribeMessages(descriptor_, this);
         }
     }
 
     virtual void handle(IMessage* msg) 
     {
-        // std::for_each(msg_list_.begin, msg_list_.end, HandlerCaller(msg));
+        std::for_each(msg_list_.begin(), msg_list_.end(), HandlerCaller(msg));
     }
 private:
     int descriptor_;

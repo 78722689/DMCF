@@ -23,14 +23,17 @@ public:
 // Response for dispatching message when received from notification unit.
 class MsgDispatcher : public IDispatcher
 {
+//    typedef std::multimap<>
 public:
     MsgDispatcher()
     {}
     ~MsgDispatcher()
     {}
 
-    void startDispatcher()
-    {}
+    void start()
+    {
+
+    }
 
     void registerService()
     {}
@@ -38,13 +41,14 @@ public:
     void unregisterService()
     {}
 
-    void subscribeMessages(IMsgReceiver* receiver)
+    inline void subscribeMessages(int descriptor, IMsgReceiver* receiver)
     {
         receiver_list_.push_back(receiver);
     }
 
 private:
-    void notifyMessageToSubscriber()
+    template<typename T>
+    void notifyMessageToSubscriber(const T& msg)
     {}
 
 
