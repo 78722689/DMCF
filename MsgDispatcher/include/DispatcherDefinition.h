@@ -9,6 +9,8 @@ public:
     {}
 
     virtual int getMsgId () const = 0;
+    virtual int getDestDescriptor() const = 0;
+    virtual int getSourceDescriptor() const = 0;
 };
 
 // Message base for all IPC messages
@@ -20,10 +22,14 @@ public:
     virtual ~MSG_BASE()
     {}
 
-    virtual int getMsgId() const {return msgid_;}
-    
+    inline virtual int getMsgId() const {return msgid_;}
+    inline virtual int getDestDescriptor() const {return dest_;}    
+    inline virtual int getSourceDescriptor() const {return source_;}
+
 protected:
     int msgid_;
+    int dest_;
+    int source_;
 };
 
 // An example message
@@ -40,3 +46,4 @@ public:
 };
 
 #endif // _DISPATCHER_DEFINITION_
+

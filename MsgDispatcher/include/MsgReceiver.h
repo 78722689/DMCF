@@ -104,7 +104,7 @@ protected:
         }
     }
 
-    virtual void handle(IMessage* msg) 
+    virtual void handle(const IMessage& msg) 
     {
         std::for_each(msg_list_.begin(), msg_list_.end(), HandlerCaller(msg));
     }
