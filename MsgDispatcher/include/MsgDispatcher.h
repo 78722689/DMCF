@@ -42,7 +42,7 @@ class MsgDispatcher : public IDispatcher
 {
     typedef std::multimap<int, IMsgReceiver*>  RECEIVERS_MAP;
     typedef RECEIVERS_MAP::const_iterator RECEIVERS_ELEMENT_ITERATOR;
-    typedef std::pair<RECEIVERS_ELEMENT_ITERATOR, RECEIVERS_ELEMENT_ITERATOR> RECEIVERS_CONST_ITERATOR;
+    typedef std::pair<RECEIVERS_ELEMENT_ITERATOR, RECEIVERS_ELEMENT_ITERATOR> RECEIVERS_PAIR_RANGE;
 
 public:
     MsgDispatcher()

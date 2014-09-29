@@ -25,7 +25,7 @@ template<class THREAD>
 template<typename MESSAGE>
 void MsgDispatcher<THREAD>::notifyMessageToSubscribers(const MESSAGE& msg)
 {
-    RECEIVERS_CONST_ITERATOR it = receiver_map_.equal_range(msg.getDestDescriptor());
+    RECEIVERS_PAIR_RANGE it = receiver_map_.equal_range(msg.getDestDescriptor());
     for (RECEIVERS_ELEMENT_ITERATOR element = it.first;  element != it.second; ++element)
     {
         element->second->handle(msg);
