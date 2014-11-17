@@ -15,9 +15,10 @@ C++11, CMAKE
   1. Create a empty folder with name "build" under the root directory. 
   2. cd build/ 
   3. cmake .. 
-  4. make 
+  4. make  
+
 ##WIKI Page
-[WIKI](https://github.com/78722689/DMCF/wiki/DMCF)
+[Wiki page is here](https://github.com/78722689/DMCF/wiki/DMCF)
 
 ##Usage
     // define message/event id 
