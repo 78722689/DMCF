@@ -1,5 +1,7 @@
-Distributed Message Communication Framework(DMCF)
-=================================================
+DMCF
+====
+Distributed Message Communication Framework
+--------------------------------------------
 C++ Library
 Current Version: v1.0.0
 
@@ -21,11 +23,11 @@ Building
 
 Usage
 ------
-// define message/event id
+\// define message/event id
 \#define evStart_TEST_id 0x01
 \#define evResponse_TEST_id 0x02
 
-// define message/event
+\// define message/event
 class evStart: public Event{
 public:
     evStart() : src_(NULL)
