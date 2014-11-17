@@ -16,6 +16,8 @@ C++11, CMAKE
   2. cd build/ 
   3. cmake .. 
   4. make 
+##WIKI Page
+[WIKI](https://github.com/78722689/DMCF/wiki/DMCF)
 
 ##Usage
     // define message/event id 
