@@ -24,9 +24,9 @@ Building
 Usage
 ------
 >// define message/event id 
->\#define evStart_TEST_id 0x01 
->\#define evResponse_TEST_id 0x02 
-
+>#define evStart_TEST_id 0x01 
+>#define evResponse_TEST_id 0x02 
+> 
 >// define message/event 
 >class evStart: public Event{ 
 public:
