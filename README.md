@@ -1,14 +1,13 @@
-DMCF
-====
+DMCF   
 Distributed Message Communication Framework
 --------------------------------------------
-  C++ Library 
-  Current Version: v1.0.0 
+C++ Library   
+Current Version: v1.0.0
 
 Introduction
 ---------------
-  A c++ library in Linux to provide the basic communication 
-  in Multi-threads, Multi-processes and Multi-Nodes. 
+A c++ library in Linux to provide the basic communication   
+in Multi-threads, Multi-processes and Multi-Nodes.    
 
 Requirements
 ------------
