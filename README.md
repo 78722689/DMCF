@@ -1,27 +1,23 @@
-DMCF   
-Distributed Message Communication Framework
---------------------------------------------
+DMCF 
+-----  
+##Distributed Message Communication Framework
 C++ Library   
 Current Version: v1.0.0
 
-Introduction
----------------
+##Introduction
 A c++ library in Linux to provide the basic communication   
 in Multi-threads, Multi-processes and Multi-Nodes.    
 
-Requirements
-------------
-  C++11, CMAKE
+##Requirements
+C++11, CMAKE
 
-Building
---------
+##Building
   1. Create a empty folder with name "build" under the root directory. 
   2. cd build/ 
   3. cmake .. 
   4. make 
 
-Usage
-------
+##Usage
     // define message/event id 
     #define evStart_TEST_id 0x01 
     #define evResponse_TEST_id 0x02 
